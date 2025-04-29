@@ -1,15 +1,29 @@
-import fastify from 'fastify'
+const fastify = require("fastify")();
 
-const server = fastify()
+fastify.register(require('@fastify/websocket'));
 
-server.get('/', async (request, reply) => {
-	return 'pong\n'
+fastify.register(async function (fastify) {
+	fastify.get('/chat', { websocket: true }, (socket /* WebSocket */, req /* FastifyRequest */) => {
+		socket.on('message', message => {
+			// message.toString() === 'hi from client'
+			socket.send(message.toString());
+		})
+	})
 })
 
-server.listen({ host: '0.0.0.0', port: 3000}, (err, addr) => {
+// fastify.get('/chat', { websocket: true }, (connection /* WebSocket */, req) => {
+// 	console.log('New connection');
+// 	console.log(connection.socket instanceof WebSocket);
+// 	connection.socket.on("message", (msg) => {
+// 		console.log('Message received:', msg);
+// 		connection.socket.send(msg);
+// 	});
+// });
+
+fastify.listen({ host: '0.0.0.0', port: 3000}, (err, addr) => {
 	if (err) {
 		console.error(err)
 		process.exit(1)
 	}
-	console.log(`Serveir listening at ${addr}`)
+	console.log(`Server listening at ${addr}`)
 })
