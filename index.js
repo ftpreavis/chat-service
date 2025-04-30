@@ -1,6 +1,8 @@
 const fastify = require("fastify")();
+const metrics = require('fastify-metrics');
 
 fastify.register(require('@fastify/websocket'));
+fastify.register(metrics, { endpoint: '/metrics' });
 
 fastify.register(async function (fastify) {
 	fastify.get('/chat', { websocket: true }, (socket /* WebSocket */, req /* FastifyRequest */) => {
