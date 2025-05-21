@@ -26,8 +26,7 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 
 COPY --from=builder /app/index.js ./
-#COPY --from=builder /app/routes ./routes
-#COPY --from=builder /app/middleware ./middleware
+COPY --from=builder /app/src ./src
 
 USER app
 
