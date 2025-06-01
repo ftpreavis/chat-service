@@ -2,13 +2,16 @@ const { Server } = require('socket.io');
 const axios = require('axios');
 const fp = require('fastify-plugin');
 
+const isProd = process.env.NODE_ENV === 'production';
+
 module.exports = fp(async function (fastify, opts) {
 	fastify.addHook('onReady', async () => {
 		const io = new Server(fastify.server, {
 			cors: {
-				origin: '*',
+				origin: isProd ? 'https://transcendance.charles-poulain.ovh' : '*',
 				methods: ['GET', 'POST'],
 			},
+			path: '/socket/chat',
 		});
 
 		const users = new Map();
