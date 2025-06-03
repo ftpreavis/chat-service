@@ -23,13 +23,20 @@ module.exports = fp(async function (fastify, opts) {
 				return socket.disconnect();
 			}
 
+			const alreadyConnected = users.has(userId);
 			users.set(userId, socket.id);
 			socket.join(`user:${userId}`);
 			console.log(`chatSocket: User ${userId} connected`);
 
+			if (!alreadyConnected) {
+				io.emit('user_status_change', { userId, status: 'online' });
+			}
+
+			socket.emit('online_users', Array.from(users.keys()));
+
 			socket.on('send_message', async ({ toUserId, content }) => {
 				try {
-					const { data:message } = await axios.post('http://db-service:3000/chat/messages', {
+					const { data: message } = await axios.post('http://db-service:3000/chat/messages', {
 						senderId: userId,
 						receiverId: toUserId,
 						content,
@@ -61,8 +68,12 @@ module.exports = fp(async function (fastify, opts) {
 			});
 
 			socket.on('disconnect', () => {
-				users.delete(userId);
-				console.log(`chatSocket: User ${userId} disconnected`);
+				const current = users.get(userId);
+				if (current === socket.id) {
+					users.delete(userId);
+					io.emit('user_status_change', { userId, status: 'offline' });
+					console.log(`chatSocket: User ${userId} disconnected`);
+				}
 			});
 		});
 	});
